@@ -1,0 +1,3 @@
+/login = top.djosimon.servlet.servlet_learn_01.LoginServlet
+/delete = top.djosimon.servlet.servlet_learn_01.DeleteServlet
+/save = top.djosimon.servlet.servlet_learn_01.SaveServlet

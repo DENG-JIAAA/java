@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!--druid-->
+    <bean id="myDruidDataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init"
+          destroy-method="close">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="${jdbc.max}"/>
+    </bean>
+
+    <!--factory-->
+    <bean id="mySqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="myDruidDataSource"/>
+        <property name="configLocation" value="classpath:mybatis.xml"/>
+    </bean>
+
+    <!--dao-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="mySqlSessionFactory"/>
+        <property name="basePackage" value="top.djosimon.dao"/>
+    </bean>
+
+    <!--service-->
+    <bean id="userService" class="top.djosimon.service.impl.UserServiceImpl">
+        <property name="saleDao" ref="saleDao"/>
+        <property name="goodsDao" ref="goodsDao"/>
+    </bean>
+
+    <!--事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="myDruidDataSource"/>
+    </bean>
+
+    <!--声明方法的事务属性（声明式事务，适合大型项目）-->
+    <tx:advice id="myAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!--
+                name:方法名称（不带包名和类名），可以使用通配符”*“
+                propagation:传播行为（方法在什么情况下开启事务）
+                isolation:隔离级别（mysql默认，可重复读）
+                rollback-for:异常全限定类名（遇此异常一定回滚）
+                read-only:只读（DQL操作可设此值为：true）
+            -->
+            <!--可以指定多个/种方法-->
+            <tx:method
+                    name="buyGoodsByIdAndNums"
+                    propagation="REQUIRED"
+                    isolation="DEFAULT"
+                    rollback-for="top.djosimon.excep.NotEnoughException, java.lang.NullPointerException"
+                    read-only="false"
+            />
+            <!--通配符的使用 可以对不同”类别“的方法进行不同的事务开启-->
+            <!--指定所有【增加】方法开启事务（传播行为：必需的）-->
+            <tx:method name="add*" propagation="REQUIRED"/>
+            <!--指定所有【删除】方法开启事务（传播行为：总是开启新事务）-->
+            <tx:method name="remove*" propagation="REQUIRES_NEW"/>
+            <!--指定所有【修改】方法开启事务-->
+            <tx:method name="modify*"/>
+            <!--其他例如【查询】方法，query、search、find（事务开启可有可无），指定为只读-->
+            <tx:method name="*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置aop（哪些类/方法需要代理）-->
+    <aop:config>
+        <!--
+            配置切入点表达式（指定哪些包，哪些类中的方法要开启事务）
+                id：切入点表达式的名称，唯一值
+                execution：切入点表达式，指定哪些类要用事务，aspectj会为此创建代理对象
+        -->
+        <aop:pointcut id="userServicePointCut" expression="execution(* *..service..*.*(..))"/>
+        <!--
+            配置增强器（关联advice和pointcut）
+                advice-ref：通知，即myAdvice
+                pointcut-ref：切入点表达式的id
+        -->
+        <aop:advisor advice-ref="myAdvice" pointcut-ref="userServicePointCut"/>
+    </aop:config>
+</beans>

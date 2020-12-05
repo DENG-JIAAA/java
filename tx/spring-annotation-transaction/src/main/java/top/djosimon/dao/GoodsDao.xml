@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="top.djosimon.dao.GoodsDao">
+    <select id="selectOneGoodsById" resultType="top.djosimon.entity.Goods">
+        select id, name, count, price from goods where id = #{id}
+    </select>
+
+    <update id="updateOneGoods">
+        update goods set count = count - #{count} where id = #{id}
+    </update>
+</mapper>

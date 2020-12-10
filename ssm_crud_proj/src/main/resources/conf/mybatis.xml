@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+
+    <!-- settings：控制mybatis全局行为 -->
+    <settings>
+        <!--<setting name="logImpl" value="STDOUT_LOGGING"/>-->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+    
+
+    <!-- 设置别名：为mapper文件的resultType起别名 -->
+    <typeAliases>
+        <package name="top.djosimon.domain"/>
+    </typeAliases>
+
+    <!--配置PageHelper分页插件-->
+    <!--<plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor"/>
+    </plugins>-->
+
+    <!--加载指定mapper文件（映射器）的位置-->
+    <mappers>
+        <package name="top.djosimon.dao"/>
+    </mappers>
+</configuration>

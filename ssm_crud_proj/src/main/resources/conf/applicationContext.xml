@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:property-placeholder location="classpath:conf/jdbc.properties"/>
+    <context:component-scan base-package="top.djosimon.service"/>
+
+    <!--声明druid数据库连接池-->
+    <bean id="userDruidPool" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+    </bean>
+
+    <!--声明mybatis提供的类：SqlSessionFactoryBean（这个类内部创建SqlSessionFactory）-->
+    <bean id="userSqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="userDruidPool"/>
+        <property name="configLocation" value="classpath:conf/mybatis.xml"/>
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+    </bean>
+
+    <!--创建UserDao对象，SqlSession的getMapper(UserDao.class)-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!--执指定SqlSessionFactory对象的id-->
+        <property name="sqlSessionFactoryBeanName" value="userSqlSessionFactory"/>
+        <!--指定包名，包名为dao接口所在，默认名为接口首字母小写-->
+        <property name="basePackage" value="top.djosimon.dao"/>
+    </bean>
+
+</beans>
